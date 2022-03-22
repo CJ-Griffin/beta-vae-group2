@@ -7,35 +7,15 @@ Original file is located at
     https://colab.research.google.com/drive/1CATb5j96C6GPpqoPKDFO86SZ6kIn7BU1
 """
 
-import torch.onnx
-
 from models import AE, VAE, VAE_Loss, AE_Loss
-from visualisation import show_images, visualize_latent_space
-from running import get_dataloader, train_and_plot
+from running import run_experiment
 
 if __name__ == "__main__":
-    g_device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    print(f'Using {g_device} device')
+    ae = AE()
+    run_experiment(ae, AE_Loss, epochs=1)
 
-    g_model = AE()
-    g_encoder = g_model.encoder
-    g_decoder = g_model.decoder
-    g_model.to(g_device)
-    g_optimizer = torch.optim.Adam(params=g_model.parameters(), lr=0.001)
-
-    train_and_plot(model=g_model, optimizer=g_optimizer, criterion=AE_Loss, epochs=3)
-
-    g_test_examples, _ = next(iter(get_dataloader(batch_size=10, train=False)))
-    g_test_examples = g_test_examples[:10, :].to(g_device)
-
-    show_images(g_test_examples)
-    show_images(g_model(g_test_examples))
-
-    g_examples_loader = get_dataloader(batch_size=1000, train=False)
-    g_test_examples, _ = next(iter(g_examples_loader))
-    print(g_test_examples.shape)
-
-    visualize_latent_space(g_test_examples, g_model.encoder)
+    vae = VAE()
+    run_experiment(vae, VAE_Loss, epochs=1)
 
     # g_encoder.to(g_device)
     # g_decoder.to(g_device)
@@ -55,12 +35,11 @@ if __name__ == "__main__":
     #
     # export_data_to_json(g_test_loader, 5000, "mnist")
 
-
-    g_vae = VAE()
-    g_vae.to(g_device)
-    g_vae_optimizer = torch.optim.Adam(params=g_vae.parameters(), lr=0.001)
-
-    train_and_plot(model=g_vae, optimizer=g_vae_optimizer, epochs=3, criterion=VAE_Loss)
+    # g_vae = VAE()
+    # g_vae.to(device)
+    # g_vae_optimizer = torch.optim.Adam(params=g_vae.parameters(), lr=0.001)
+    #
+    # train_and_plot(model=g_vae, optimizer=g_vae_optimizer, epochs=3, criterion=VAE_Loss)
     # train_and_plot(model=g_vae, optimizer=g_vae_optimizer, epochs=5, criterion=VAE_Loss)
     # train_and_plot(model=g_vae, optimizer=g_vae_optimizer, epochs=5, criterion=VAE_Loss)
     # train_and_plot(model=g_vae, optimizer=g_vae_optimizer, epochs=5, criterion=VAE_Loss)

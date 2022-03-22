@@ -3,7 +3,7 @@ import math
 from matplotlib import pyplot as plt
 
 
-def show_images(X):
+def show_images(X) -> plt.Figure:
     fig = plt.figure()
     X = X.detach().to('cpu')
     n = X.shape[0]
@@ -16,14 +16,16 @@ def show_images(X):
         plt.imshow(X[i][0], cmap='gray', interpolation='none')
         plt.xticks([])
         plt.yticks([])
-    plt.show()
+    return fig
 
 
-def visualize_latent_space(X, encoder):
+def visualize_latent_space(X, encoder) -> plt.Figure:
     X = X.to(next(encoder.parameters()).device)
     Z = encoder(X)
     Z = Z.to('cpu').detach()
+    fig = plt.figure()
     plt.scatter(Z[:, 0], Z[:, 1])
+    return fig
 
 
 # class To_Canvas_Format(nn.Module):
