@@ -5,7 +5,6 @@ from torch.nn import functional as F
 
 # from copy_of_encoder_experiments import g_mseloss
 
-
 class Encoder(nn.Module):
     def __init__(self, latent_size=2):
         super().__init__()
@@ -59,16 +58,17 @@ class Decoder(nn.Module):
 
 
 class AE(nn.Sequential):
-    def __init__(self):
-        encoder = Encoder()
-        decoder = Decoder()
+    def __init__(self, latent_size=10):
+        encoder = Encoder(latent_size=latent_size)
+        decoder = Decoder(latent_size=latent_size)
         super().__init__(encoder, decoder)
+        self.latent_size = latent_size
         self.encoder = encoder
         self.decoder = decoder
 
 
 class VAE(nn.Module):
-    def __init__(self, latent_size=2):
+    def __init__(self, latent_size=10):
         super().__init__()
         self.latent_size = latent_size
         self.encoder = Encoder(latent_size * 2)
@@ -91,7 +91,7 @@ class VAE(nn.Module):
         return (X, KL)
 
 
-def VAE_Loss(model_output, X):
+def VAE_Loss(model_output, X, beta=1.0):
     X_out, KL = model_output
     return AE_Loss(X_out, X) + KL
 

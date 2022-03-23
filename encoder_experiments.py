@@ -7,15 +7,23 @@ Original file is located at
     https://colab.research.google.com/drive/1CATb5j96C6GPpqoPKDFO86SZ6kIn7BU1
 """
 
-from models import AE, VAE, VAE_Loss, AE_Loss
 from running import run_experiment
 
-if __name__ == "__main__":
-    ae = AE()
-    run_experiment(ae, AE_Loss, epochs=1)
 
-    vae = VAE()
-    run_experiment(vae, VAE_Loss, epochs=1)
+if __name__ == "__main__":
+    run_experiment(model_name="AE",
+                   latent_size=10,
+                   beta=1.0,
+                   lr=0.001,
+                   epochs=10,
+                   dataset_name="MNIST")
+
+    run_experiment(model_name="VAE",
+                   latent_size=10,
+                   beta=1.0,
+                   lr=0.001,
+                   epochs=10,
+                   dataset_name="MNIST")
 
     # g_encoder.to(g_device)
     # g_decoder.to(g_device)

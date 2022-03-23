@@ -7,6 +7,7 @@ import torch.cuda
 import torch.nn
 import torch.optim
 import torchvision
+from models import AE, VAE, VAE_Loss, AE_Loss
 from matplotlib import pyplot as plt
 from neptune import new as neptune
 from tqdm import tqdm
@@ -97,21 +98,33 @@ def train_and_plot(model, optimizer, criterion, nept_log, dataset_name: str,
     # plt.show()
 
 
-def run_experiment(model: torch.nn.Module,
-                   criterion,
+def run_experiment(model_name: str,
+                   latent_size: int = 10,
+                   beta: float = 1.0,
                    lr: float = 0.001,
                    epochs: int = 3,
                    dataset_name: str = "MNIST"
                    ):
     nept_log = neptune.init(project="cj.griffin/beta-vae",
                             api_token=os.getenv('NEPTUNE_API_TOKEN'), )
-    nept_log["model_name"] = type(model).__name__
+    nept_log["model_name"] = model_name
     nept_log["lr"] = lr
     nept_log["epochs"] = epochs
     nept_log["dataset_name"] = dataset_name
+    nept_log["latent_size"] = latent_size
+    nept_log["beta"] = beta
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(f'Using {device} device')
+
+    if model_name == "AE":
+        model = AE(latent_size=latent_size)
+        criterion = AE_Loss
+    elif model_name == "VAE":
+        model = VAE(latent_size=latent_size)
+        criterion = (lambda model_output, X: VAE_Loss(model_output, X, beta=beta))
+    else:
+        raise NotImplementedError(f"model_name={model_name} not implemented")
     model.to(device)
 
     optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
@@ -139,7 +152,7 @@ def run_experiment(model: torch.nn.Module,
     fig2 = show_images(model_out)
     nept_log["recon_images"].upload(fig2)
 
-    torch.save(model, "temp.pt")
+    torch.save(model, "model_checkpoints/temp.pt")
     nept_log["model_checkpoints/model"].upload("model_checkpoints/temp.pt")
 
     nept_log.stop()
