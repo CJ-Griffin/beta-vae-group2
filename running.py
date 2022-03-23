@@ -29,10 +29,13 @@ def get_dataloader(dataset_name: str,
             batch_size=batch_size, shuffle=True)
     elif dataset_name == "CelebA":
         return torch.utils.data.DataLoader(
-            torchvision.datasets.CelebA('data', train=is_train, download=True,
-                                        transform=torchvision.transforms.Compose([
-                                            torchvision.transforms.ToTensor(),
-                                        ])),
+            torchvision.datasets.ImageFolder(root="data/CelebA/img_align_celeba",
+                                             transform=torchvision.transforms.Compose([
+                                                 torchvision.transforms.ToTensor(),
+                                                 torchvision.transforms.CenterCrop((216, 176))
+                                                 # torchvision.transforms.Normalize(
+                                                 #     (0.1307,), (0.3081,))
+                                             ])),
             batch_size=batch_size, shuffle=True)
     else:
         return NotImplementedError(f"Can't handle dataset with name {dataset_name}")
@@ -53,7 +56,6 @@ def step_autoencoder(model, criterion, loader, optimizer, train=True):
 
         if train:
             optimizer.zero_grad()
-
         X_out = model(X)
 
         losses = criterion(X_out, X)
@@ -89,6 +91,7 @@ def train_and_plot(model, optimizer, criterion, nept_log, dataset_name: str,
                                               optimizer=optimizer, train=False)
         nept_log["Test Loss"].log(test_losses[-1])
         print("epoch {}: Test Loss {}".format(epoch, test_losses[epoch]))
+        break
 
     print("time: {}".format(time.time() - start))
 
@@ -103,10 +106,13 @@ def run_experiment(model_name: str,
                    beta: float = 1.0,
                    lr: float = 0.001,
                    epochs: int = 3,
-                   dataset_name: str = "MNIST"
+                   dataset_name: str = "MNIST",
+                   api_token:str = None
                    ):
+    if api_token is None:
+        api_token=os.getenv('NEPTUNE_API_TOKEN')
     nept_log = neptune.init(project="cj.griffin/beta-vae",
-                            api_token=os.getenv('NEPTUNE_API_TOKEN'), )
+                            api_token=api_token, )
     nept_log["model_name"] = model_name
     nept_log["lr"] = lr
     nept_log["epochs"] = epochs
@@ -117,11 +123,18 @@ def run_experiment(model_name: str,
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(f'Using {device} device')
 
+    if dataset_name == "MNIST":
+        image_dim = (1, 28, 28)
+    elif dataset_name == "CelebA":
+        image_dim = (3, 216, 176)
+    else:
+        raise NotImplementedError()
+
     if model_name == "AE":
-        model = AE(latent_size=latent_size)
+        model = AE(latent_size=latent_size, image_dim=image_dim)
         criterion = AE_Loss
     elif model_name == "VAE":
-        model = VAE(latent_size=latent_size)
+        model = VAE(latent_size=latent_size, image_dim=image_dim)
         criterion = (lambda model_output, X: VAE_Loss(model_output, X, beta=beta))
     else:
         raise NotImplementedError(f"model_name={model_name} not implemented")

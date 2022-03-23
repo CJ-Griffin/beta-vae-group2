@@ -16,14 +16,14 @@ if __name__ == "__main__":
                    beta=1.0,
                    lr=0.001,
                    epochs=10,
-                   dataset_name="MNIST")
+                   dataset_name="CelebA")
 
     run_experiment(model_name="VAE",
                    latent_size=10,
                    beta=1.0,
                    lr=0.001,
                    epochs=10,
-                   dataset_name="MNIST")
+                   dataset_name="CelebA")
 
     # g_encoder.to(g_device)
     # g_decoder.to(g_device)
