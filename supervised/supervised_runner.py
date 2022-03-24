@@ -13,13 +13,16 @@ from datetime import datetime
 def create_classifier_from_neptune(run_name: str) -> (torch.nn.Module, neptune.Run):
     destination_path = f"pretrained_models/{run_name}_model.pt"
 
-    # nept_log = neptune.init(project="cj.griffin/beta-vae",
-    #                         api_token=os.getenv('NEPTUNE_API_TOKEN'),
-    #                         run=run_name)
-    # nept_log["model_checkpoints/model"].download(destination_path)
-    # nept_log.stop()
+    nept_log = neptune.init(project="cj.griffin/beta-vae",
+                            api_token=os.getenv('NEPTUNE_API_TOKEN'),
+                            run=run_name)
+    nept_log["model_checkpoints/model"].download(destination_path)
+    nept_log.stop()
 
-    vae_model = torch.load(destination_path)
+    if torch.cuda.is_available():
+        vae_model = torch.load(destination_path)
+    else:
+        vae_model = torch.load(destination_path, map_location=torch.device('cpu'))
     encoder = vae_model.encoder
     classifier = MNISTClassifier(encoder)
     return classifier
@@ -112,7 +115,7 @@ if __name__ == "__main__":
     # import matplotlib.pyplot as plt
     # plt.imshow(model(torch.ones(1,1,28,28))[0].view(28,28).detach().numpy())
     # plt.show()
-    for original_run_name in ["BVAE-24"]:
+    for original_run_name in ["BVAE-130", "BVAE-126", "BVAE-133", "BVAE-127", "BVAE-128", ]:
         for num_samples in [10,100,1000,10000]:
             experiment_supervised(original_run_name=original_run_name,
                                   num_samples=num_samples)

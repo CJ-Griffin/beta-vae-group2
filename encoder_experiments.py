@@ -8,7 +8,7 @@ Original file is located at
 """
 
 from running import run_experiment
-from supervised.download_and_init_model import experiment_supervised
+from supervised.supervised_runner import experiment_supervised
 
 if __name__ == "__main__":
     # run_experiment(model_name="AE",
