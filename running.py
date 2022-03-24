@@ -17,16 +17,21 @@ from visualisation import show_images, visualize_latent_space
 
 def get_dataloader(dataset_name: str,
                    batch_size: int,
-                   is_train: bool):
+                   is_train: bool,
+                   num_samples=None):
     if dataset_name == "MNIST":
-        return torch.utils.data.DataLoader(
-            torchvision.datasets.MNIST('data', train=is_train, download=True,
+        dataset = torchvision.datasets.MNIST('data', train=is_train, download=True,
                                        transform=torchvision.transforms.Compose([
                                            torchvision.transforms.ToTensor(),
                                            # torchvision.transforms.Normalize(
                                            #     (0.1307,), (0.3081,))
-                                       ])),
-            batch_size=batch_size, shuffle=True)
+                                       ]))
+        if num_samples is not None:
+            print(dataset)
+            dataset = torch.utils.data.Subset(dataset, list(range(num_samples)))
+            # dataset = dataset[:num_samples]
+        return torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
+
     elif dataset_name == "CelebA":
         return torch.utils.data.DataLoader(
             torchvision.datasets.CelebA('data', train=is_train, download=True,
@@ -84,10 +89,10 @@ def train_and_plot(model, optimizer, criterion, nept_log, dataset_name: str,
     for epoch in range(epochs):
         train_losses[epoch] = step_autoencoder(model=model, criterion=criterion, loader=train_loader,
                                                optimizer=optimizer)
-        nept_log["Train Loss"].log(train_losses[-1])
+        nept_log["Train Loss"].log(train_losses[epoch])
         test_losses[epoch] = step_autoencoder(model=model, criterion=criterion, loader=test_loader,
                                               optimizer=optimizer, train=False)
-        nept_log["Test Loss"].log(test_losses[-1])
+        nept_log["Test Loss"].log(test_losses[epoch])
         print("epoch {}: Test Loss {}".format(epoch, test_losses[epoch]))
 
     print("time: {}".format(time.time() - start))
