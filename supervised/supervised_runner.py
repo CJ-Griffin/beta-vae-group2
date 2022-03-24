@@ -45,6 +45,7 @@ def step_classifier(model, loader, optimizer, train=True):
 
     for X, y in loader:
         X = X.to(device)
+        y = y.to(device)
 
         if train:
             optimizer.zero_grad()
@@ -97,6 +98,10 @@ def experiment_supervised(
         batch_size_test: int = 1000):
 
     classifier = create_classifier_from_neptune(original_run_name)
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    classifier.to(device)
+    print(f'Using {device} device')
+
     nept_log = neptune.init(project="cj.griffin/beta-vae",
                             api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI5ZjE4NGNlOC0wMmFjLTQxZTEtODg1ZC0xMDRhMTg3YjI2ZjAifQ==")
     nept_log["Original"] = original_run_name
