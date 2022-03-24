@@ -14,7 +14,7 @@ def create_classifier_from_neptune(run_name: str) -> (torch.nn.Module, neptune.R
     destination_path = f"pretrained_models/{run_name}_model.pt"
 
     nept_log = neptune.init(project="cj.griffin/beta-vae",
-                            api_token=os.getenv('NEPTUNE_API_TOKEN'),
+                            api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI5ZjE4NGNlOC0wMmFjLTQxZTEtODg1ZC0xMDRhMTg3YjI2ZjAifQ==",
                             run=run_name)
     nept_log["model_checkpoints/model"].download(destination_path)
     nept_log.stop()
@@ -73,10 +73,10 @@ def step_classifier(model, loader, optimizer, train=True):
     return loss, accuracy
 
 
-def train_supervised(model, optimizer, nept_log, num_samples, batch_size_train, batch_size_test): #, epochs):
+def train_supervised(model, optimizer, nept_log, num_samples, batch_size_train, batch_size_test, epochs):
     train_data = get_dataloader("MNIST", batch_size=batch_size_train, is_train=True, num_samples=num_samples)
     test_data = get_dataloader("MNIST", batch_size=batch_size_test, is_train=False)
-    epochs = int(1e3)
+    epochs = epochs
     train_losses = np.empty(epochs)
     test_losses = np.empty(epochs)
     for epoch in trange(epochs):
@@ -90,7 +90,7 @@ def train_supervised(model, optimizer, nept_log, num_samples, batch_size_train, 
 
 def experiment_supervised(
         original_run_name: str,
-        # epochs: int = 1,
+        epochs: int = 1000,
         lr: float = 0.01,
         num_samples = int(1e4),
         batch_size_train: int = 100,
@@ -98,15 +98,15 @@ def experiment_supervised(
 
     classifier = create_classifier_from_neptune(original_run_name)
     nept_log = neptune.init(project="cj.griffin/beta-vae",
-                            api_token=os.getenv('NEPTUNE_API_TOKEN'))
+                            api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI5ZjE4NGNlOC0wMmFjLTQxZTEtODg1ZC0xMDRhMTg3YjI2ZjAifQ==")
     nept_log["Original"] = original_run_name
     nept_log["num_samples"] = num_samples
     optimizer = torch.optim.Adam(params=classifier.parameters(), lr=lr)
     train_supervised(classifier, optimizer, nept_log, num_samples,
                      batch_size_train=batch_size_train,
-                     batch_size_test=batch_size_test)
-                     # epochs=epochs)
-    torch.save(classifier, "/supervised_checkpoints/classifier.pt")
+                     batch_size_test=batch_size_test,
+                     epochs=epochs)
+    torch.save(classifier, "supervised_checkpoints/classifier.pt")
     nept_log["model_checkpoints/supervised"].upload("supervised_checkpoints/classifier.pt")
 
 
@@ -118,4 +118,5 @@ if __name__ == "__main__":
     for original_run_name in ["BVAE-130", "BVAE-126", "BVAE-133", "BVAE-127", "BVAE-128", ]:
         for num_samples in [10,100,1000,10000]:
             experiment_supervised(original_run_name=original_run_name,
-                                  num_samples=num_samples)
+                                  num_samples=num_samples,
+                                  epochs=1)

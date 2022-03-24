@@ -8,4 +8,5 @@ if __name__ == "__main__":
     for original_run_name in ["BVAE-130", "BVAE-126", "BVAE-133", "BVAE-127", "BVAE-128", ]:
         for num_samples in [10,100,1000,10000]:
             experiment_supervised(original_run_name=original_run_name,
-                                  num_samples=num_samples)
+                                  num_samples=num_samples,
+                                  epochs=1)
