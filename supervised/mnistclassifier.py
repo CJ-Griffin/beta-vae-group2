@@ -8,7 +8,7 @@ class MNISTClassifier(nn.Module):
         self.encoder = encoder
         for param in self.encoder.parameters():
             param.requires_grad = False
-        self.latent_size = 10  # encoder.latent_size #TODO change back
+        self.latent_size = encoder.latent_size
 
         self.dense = nn.Sequential(
             nn.Linear(self.latent_size, self.latent_size),

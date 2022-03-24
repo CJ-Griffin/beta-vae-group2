@@ -86,7 +86,6 @@ def train_supervised(model, optimizer, nept_log, num_samples, batch_size_train, 
         test_losses[epoch], acc = step_classifier(model, test_data, optimizer, train=False)
         nept_log["supervised/Test Loss"].log(test_losses[epoch])
         nept_log["supervised/Test Acc"].log(acc)
-        print("epoch {}: Test Loss {}".format(epoch, test_losses[epoch]))
 
 
 def experiment_supervised(
@@ -121,7 +120,7 @@ if __name__ == "__main__":
     # plt.imshow(model(torch.ones(1,1,28,28))[0].view(28,28).detach().numpy())
     # plt.show()
     for original_run_name in ["BVAE-130", "BVAE-126", "BVAE-133", "BVAE-127", "BVAE-128", ]:
-        for num_samples in [10,100,1000,10000]:
+        for n in [10,100,1000,10000]:
             experiment_supervised(original_run_name=original_run_name,
-                                  num_samples=num_samples,
+                                  num_samples=n,
                                   epochs=1)
