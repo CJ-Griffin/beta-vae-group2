@@ -21,11 +21,11 @@ def get_dataloader(dataset_name: str,
                    num_samples=None):
     if dataset_name == "MNIST":
         dataset = torchvision.datasets.MNIST('data', train=is_train, download=True,
-                                       transform=torchvision.transforms.Compose([
-                                           torchvision.transforms.ToTensor(),
-                                           # torchvision.transforms.Normalize(
-                                           #     (0.1307,), (0.3081,))
-                                       ]))
+                                             transform=torchvision.transforms.Compose([
+                                                 torchvision.transforms.ToTensor(),
+                                                 # torchvision.transforms.Normalize(
+                                                 #     (0.1307,), (0.3081,))
+                                             ]))
         if num_samples is not None:
             print(dataset)
             dataset = torch.utils.data.Subset(dataset, list(range(num_samples)))
@@ -71,7 +71,7 @@ def step_autoencoder(model, criterion, loader, optimizer, train=True):
             optimizer.step()
 
         total_n += X.shape[0]
-        # break
+        break
 
     loss = total_loss / total_n
     return loss
@@ -90,10 +90,14 @@ def train_and_plot(model, optimizer, criterion, nept_log, dataset_name: str,
     for epoch in tqdm(range(epochs)):
         train_losses[epoch] = step_autoencoder(model=model, criterion=criterion, loader=train_loader,
                                                optimizer=optimizer)
-        nept_log["Train Loss"].log(train_losses[epoch])
         test_losses[epoch] = step_autoencoder(model=model, criterion=criterion, loader=test_loader,
                                               optimizer=optimizer, train=False)
-        nept_log["Test Loss"].log(test_losses[epoch])
+        if isinstance(nept_log, neptune.Run):
+            nept_log["Train Loss"].log(train_losses[epoch])
+            nept_log["Test Loss"].log(test_losses[epoch])
+        else:
+            nept_log["Train Loss"].append(train_losses[epoch])
+            nept_log["Test Loss"].append(test_losses[epoch])
         print("epoch {}: Test Loss {}".format(epoch, test_losses[epoch]))
 
     print("time: {}".format(time.time() - start))
@@ -110,11 +114,16 @@ def run_experiment(model_name: str,
                    lr: float = 0.001,
                    epochs: int = 3,
                    dataset_name: str = "MNIST",
-                   is_offline: bool = False
+                   is_offline: bool = False,
+                   is_colab: bool = False
                    ):
-    nept_log = neptune.init(project="cj.griffin/beta-vae",
-                            api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI5ZjE4NGNlOC0wMmFjLTQxZTEtODg1ZC0xMDRhMTg3YjI2ZjAifQ==",
-                            mode=("offline" if is_offline else "async"))
+    if not is_colab:
+        nept_log = neptune.init(project="cj.griffin/beta-vae",
+                                api_token=os.getenv('NEPTUNE_API_TOKEN'),
+                                mode=("offline" if is_offline else "async"))
+    else:
+        nept_log = {"Train Loss":[], "Test Loss":[]}
+
     nept_log["model_name"] = model_name
     nept_log["lr"] = lr
     nept_log["epochs"] = epochs
@@ -157,11 +166,20 @@ def run_experiment(model_name: str,
         model_out = model_out[0]
     fig2 = show_images(model_out)
 
-    nept_log["vis_latent_space"].upload(fig3)
-    nept_log["true_images"].upload(fig1)
-    nept_log["recon_images"].upload(fig2)
+    if not is_colab:
+        nept_log["vis_latent_space"].upload(fig3)
+        nept_log["true_images"].upload(fig1)
+        nept_log["recon_images"].upload(fig2)
+        torch.save(model, "model_checkpoints/temp.pt")
+        nept_log["model_checkpoints/model"].upload("model_checkpoints/temp.pt")
+    else:
+        fig3.savefig(f"vis_latent_space_{beta}_{model_name}_{latent_size}.jpg")
+        fig1.savefig(f"true_images_{beta}_{model_name}_{latent_size}.jpg")
+        fig2.savefig(f"recon_images_{beta}_{model_name}_{latent_size}.jpg")
+        torch.save(model, f"model_checkpoints/temp_{beta}_{model_name}_{latent_size}.pt")
+        import json
 
-    torch.save(model, "model_checkpoints/temp.pt")
-    nept_log["model_checkpoints/model"].upload("model_checkpoints/temp.pt")
+        with open(f'recon_images_{beta}_{model_name}_{latent_size}.log', 'w') as file:
+            file.write(json.dumps(nept_log))
 
     nept_log.stop()

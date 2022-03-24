@@ -11,16 +11,17 @@ from datetime import datetime
 
 
 def create_classifier_from_neptune(run_name: str) -> (torch.nn.Module, neptune.Run):
-    nept_log = neptune.init(project="cj.griffin/beta-vae",
-                            api_token=os.getenv('NEPTUNE_API_TOKEN'),
-                            run=run_name)
     destination_path = f"pretrained_models/{run_name}_model.pt"
-    nept_log["model_checkpoints/model"].download(destination_path)
+
+    # nept_log = neptune.init(project="cj.griffin/beta-vae",
+    #                         api_token=os.getenv('NEPTUNE_API_TOKEN'),
+    #                         run=run_name)
+    # nept_log["model_checkpoints/model"].download(destination_path)
+    # nept_log.stop()
 
     vae_model = torch.load(destination_path)
     encoder = vae_model.encoder
     classifier = MNISTClassifier(encoder)
-    nept_log.stop()
     return classifier
 
 
@@ -72,7 +73,7 @@ def step_classifier(model, loader, optimizer, train=True):
 def train_supervised(model, optimizer, nept_log, num_samples, batch_size_train, batch_size_test): #, epochs):
     train_data = get_dataloader("MNIST", batch_size=batch_size_train, is_train=True, num_samples=num_samples)
     test_data = get_dataloader("MNIST", batch_size=batch_size_test, is_train=False)
-    epochs = 25
+    epochs = int(1e3)
     train_losses = np.empty(epochs)
     test_losses = np.empty(epochs)
     for epoch in trange(epochs):
@@ -102,7 +103,7 @@ def experiment_supervised(
                      batch_size_train=batch_size_train,
                      batch_size_test=batch_size_test)
                      # epochs=epochs)
-    torch.save(classifier, "supervised_checkpoints/classifier.pt")
+    torch.save(classifier, "/supervised_checkpoints/classifier.pt")
     nept_log["model_checkpoints/supervised"].upload("supervised_checkpoints/classifier.pt")
 
 

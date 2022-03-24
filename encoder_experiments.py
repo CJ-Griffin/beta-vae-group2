@@ -8,22 +8,28 @@ Original file is located at
 """
 
 from running import run_experiment
-
+from supervised.download_and_init_model import experiment_supervised
 
 if __name__ == "__main__":
-    run_experiment(model_name="AE",
-                   latent_size=10,
-                   beta=1.0,
-                   lr=0.001,
-                   epochs=10,
-                   dataset_name="MNIST")
+    # run_experiment(model_name="AE",
+    #                latent_size=10,
+    #                beta=1.0,
+    #                lr=0.001,
+    #                epochs=1,
+    #                dataset_name="MNIST")
+    for beta in [1.0, 4.0, 16.0]:  # [0.0, 0.5, 1.0, 2.0, 4.0, 8.0, 16.0]:
+        run_experiment(model_name="VAE",
+                       latent_size=10,
+                       beta=beta,
+                       lr=0.001,
+                       epochs=10,
+                       dataset_name="MNIST")
 
-    run_experiment(model_name="VAE",
-                   latent_size=10,
-                   beta=1.0,
-                   lr=0.001,
-                   epochs=10,
-                   dataset_name="MNIST")
+    # experiment_supervised("BVAE-24")
+    # for original_run_name in ["BVAE-24"]:
+    #     for num_samples in [10,100,1000,10000]:
+    #         experiment_supervised(original_run_name=original_run_name,
+    #                               num_samples=num_samples)
 
     # g_encoder.to(g_device)
     # g_decoder.to(g_device)
