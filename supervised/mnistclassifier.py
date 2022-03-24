@@ -18,6 +18,6 @@ class MNISTClassifier(nn.Module):
         )
 
     def forward(self, x):
-        z = self.encoder(x)[:,0:10]
+        z = self.encoder(x)[:,0:self.latent_size]
         ps = self.dense(z)
         return ps
