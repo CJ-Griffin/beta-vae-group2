@@ -3,29 +3,33 @@ import os
 
 import numpy as np
 import torch
+from matplotlib import pyplot as plt
 
-from supervised.mnistclassifier import MNISTClassifier
+from models import MNISTClassifier
 from running import get_dataloader
 from tqdm import trange, tqdm
 from datetime import datetime
 
+from visualisation import show_images, compare_images
 
-def create_classifier_from_neptune(run_name: str) -> (torch.nn.Module, neptune.Run):
-    destination_path = f"pretrained_models/{run_name}_model.pt"
+
+def get_vae_from_neptune(run_name: str) -> (torch.nn.Module, neptune.Run):
+    destination_path = f"models/pretrained_models/{run_name}_model.pt"
 
     nept_log = neptune.init(project="cj.griffin/beta-vae",
                             api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI5ZjE4NGNlOC0wMmFjLTQxZTEtODg1ZC0xMDRhMTg3YjI2ZjAifQ==",
                             run=run_name)
     nept_log["model_checkpoints/model"].download(destination_path)
+    beta = nept_log["beta"].fetch()
+    # print(dir(beta))
+    beta = float(beta)
     nept_log.stop()
 
     if torch.cuda.is_available():
         vae_model = torch.load(destination_path)
     else:
         vae_model = torch.load(destination_path, map_location=torch.device('cpu'))
-    encoder = vae_model.encoder
-    classifier = MNISTClassifier(encoder)
-    return classifier
+    return vae_model, beta
 
 
 def step_classifier(model, loader, optimizer, train=True):
@@ -110,17 +114,70 @@ def experiment_supervised(
                      batch_size_train=batch_size_train,
                      batch_size_test=batch_size_test,
                      epochs=epochs)
-    torch.save(classifier, "supervised_checkpoints/classifier.pt")
-    nept_log["model_checkpoints/supervised"].upload("supervised_checkpoints/classifier.pt")
+    torch.save(classifier, "models/supervised_checkpoints/classifier.pt")
+    nept_log["model_checkpoints/supervised"].upload("models/supervised_checkpoints/classifier.pt")
+
+
+def get_one_of_each_digit():
+    train_data = get_dataloader("MNIST", batch_size=1, is_train=True)
+    data_iter = iter(train_data)
+    examples = []
+    for dig in range(10):
+        next_im, next_y = next(data_iter)
+        while next_y != dig:
+            next_im, next_y = next(data_iter)
+        examples.append(next_im)
+    return examples
 
 
 if __name__ == "__main__":
+    to_test_2 = list(reversed([
+        "BVAE-159",
+        "BVAE-156",
+        "BVAE-155",
+        "BVAE-154",
+        "BVAE-153",
+        "BVAE-152",
+        "BVAE-151"
+    ]))
+    to_test_10 = list(reversed([
+        "BVAE-166",
+        "BVAE-165",
+        "BVAE-169",
+        "BVAE-167",
+        "BVAE-162",
+        "BVAE-161",
+        "BVAE-160"
+    ]))
     # model, _ = load_model_from_neptune("BVAE-24")
     # import matplotlib.pyplot as plt
     # plt.imshow(model(torch.ones(1,1,28,28))[0].view(28,28).detach().numpy())
     # plt.show()
-    for original_run_name in ["BVAE-130", "BVAE-126", "BVAE-133", "BVAE-127", "BVAE-128", ]:
-        for n in [10,100,1000,10000]:
-            experiment_supervised(original_run_name=original_run_name,
-                                  num_samples=n,
-                                  epochs=1)
+    models = {}
+    betas = {}
+    for original_run_name in to_test_10: # Change 10 to 2 everywhere to switch
+        model, beta = get_vae_from_neptune(run_name=original_run_name)
+        models[original_run_name] = model
+        betas[original_run_name] = beta
+    print(models)
+
+    for fig_no in range(10):
+        to_plot_dict = {}
+        X_og = get_one_of_each_digit()
+        X_og = torch.stack(X_og, dim=0).view(10,1,28,28)
+        # print(X_og.shape)
+        # fig = show_images(X_og)
+        # plt.show()
+        # fig.show()
+        labeled_dict = {"True":X_og}
+        for name in to_test_10:
+            X_recon, _ = models[name](X_og)
+            label = f"β={betas[name]}"
+            labeled_dict[label] = X_recon
+
+        fig = compare_images(labeled_dict)
+        plt.savefig(f"images/ls10_{fig_no}.png")
+
+
+
+

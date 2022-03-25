@@ -19,6 +19,29 @@ def show_images(X) -> plt.Figure:
     return fig
 
 
+# Give a dict of title : set of images
+
+def compare_images(X_dict) -> plt.Figure:
+    width = len(X_dict)
+    height = (X_dict[list(X_dict.keys())[0]]).shape[0]
+    for _, X in X_dict.items():
+        assert X.shape[0] == height
+    fig, axes = plt.subplots(height, width)
+    fig.tight_layout()
+    for col_no, (title, X) in enumerate(X_dict.items()):
+        X = X.detach().to('cpu')
+        axes[0][col_no].set_title(title, fontsize=6)
+        for row_no in range(height):
+            ax = axes[row_no][col_no]
+            # ax.tight_layout()
+            ax.imshow(X[row_no][0], cmap='gray', interpolation='none')
+            ax.set_xticks([])
+            ax.set_yticks([])
+    fig.tight_layout()
+    fig.set_size_inches(2.5, 4, forward=True)
+    return fig
+
+
 def visualize_latent_space(X, encoder) -> plt.Figure:
     X = X.to(next(encoder.parameters()).device)
     Z = encoder(X)

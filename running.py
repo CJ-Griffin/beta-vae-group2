@@ -12,6 +12,7 @@ from matplotlib import pyplot as plt
 from neptune import new as neptune
 from tqdm import tqdm
 
+from shape_dataset import ShapesDataset
 from visualisation import show_images, visualize_latent_space
 
 
@@ -30,6 +31,12 @@ def get_dataloader(dataset_name: str,
             print(dataset)
             dataset = torch.utils.data.Subset(dataset, list(range(num_samples)))
             # dataset = dataset[:num_samples]
+        return torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
+    elif dataset_name == "Shapes":
+        dataset = ShapesDataset()
+        if num_samples is not None:
+            print(dataset)
+            dataset = torch.utils.data.Subset(dataset, list(range(num_samples)))
         return torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
     elif dataset_name == "CelebA":
@@ -161,7 +168,7 @@ def run_experiment(model_name: str,
     nept_log["true_images"].upload(fig1)
     nept_log["recon_images"].upload(fig2)
 
-    torch.save(model, "model_checkpoints/temp.pt")
-    nept_log["model_checkpoints/model"].upload("model_checkpoints/temp.pt")
+    torch.save(model, "models/model_checkpoints/temp.pt")
+    nept_log["model_checkpoints/model"].upload("models/model_checkpoints/temp.pt")
 
     nept_log.stop()

@@ -1,5 +1,5 @@
 import torch
-from torch import nn as nn
+from torch import nn as nn, nn
 from torch.nn import functional as F
 
 
@@ -94,7 +94,7 @@ class VAE(nn.Module):
 
 def VAE_Loss(model_output, X, beta=1.0):
     X_out, KL = model_output
-    return AE_Loss(X_out, X) + KL
+    return AE_Loss(X_out, X) + beta*KL
 
 
 # TODO - is this okay?
@@ -118,3 +118,24 @@ class VAE_to_encoder(nn.Module):
         X = self.encoder(X)
         mu, log_var = torch.split(X, self.latent_size, dim=1)
         return mu
+
+
+class MNISTClassifier(nn.Module):
+    def __init__(self, encoder: Encoder):
+        super().__init__()
+        self.encoder = encoder
+        for param in self.encoder.parameters():
+            param.requires_grad = False
+        self.latent_size = encoder.latent_size
+
+        self.dense = nn.Sequential(
+            nn.Linear(self.latent_size, self.latent_size),
+            nn.ReLU(),
+            nn.Linear(self.latent_size, 10),
+            nn.Softmax()
+        )
+
+    def forward(self, x):
+        z = self.encoder(x)[:,0:self.latent_size]
+        ps = self.dense(z)
+        return ps
