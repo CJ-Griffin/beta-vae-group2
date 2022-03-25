@@ -22,20 +22,18 @@ def get_dataloader(dataset_name: str,
                    num_samples=None):
     if dataset_name == "MNIST":
         dataset = torchvision.datasets.MNIST('data', train=is_train, download=True,
-                                       transform=torchvision.transforms.Compose([
-                                           torchvision.transforms.ToTensor(),
-                                           # torchvision.transforms.Normalize(
-                                           #     (0.1307,), (0.3081,))
-                                       ]))
+                                             transform=torchvision.transforms.Compose([
+                                                 torchvision.transforms.ToTensor(),
+                                                 # torchvision.transforms.Normalize(
+                                                 #     (0.1307,), (0.3081,))
+                                             ]))
         if num_samples is not None:
-            print(dataset)
             dataset = torch.utils.data.Subset(dataset, list(range(num_samples)))
             # dataset = dataset[:num_samples]
         return torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
     elif dataset_name == "Shapes":
         dataset = ShapesDataset()
         if num_samples is not None:
-            print(dataset)
             dataset = torch.utils.data.Subset(dataset, list(range(num_samples)))
         return torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
@@ -86,7 +84,6 @@ def step_autoencoder(model, criterion, loader, optimizer, train=True):
 
 def train_and_plot(model, optimizer, criterion, nept_log, dataset_name: str,
                    epochs=3, batch_size_train=100, batch_size_test=1000):
-    start = time.time()
 
     train_loader = get_dataloader(dataset_name=dataset_name, batch_size=batch_size_train, is_train=True)
     test_loader = get_dataloader(dataset_name=dataset_name, batch_size=batch_size_test, is_train=False)
@@ -101,14 +98,6 @@ def train_and_plot(model, optimizer, criterion, nept_log, dataset_name: str,
         test_losses[epoch] = step_autoencoder(model=model, criterion=criterion, loader=test_loader,
                                               optimizer=optimizer, train=False)
         nept_log["Test Loss"].log(test_losses[epoch])
-        print("epoch {}: Test Loss {}".format(epoch, test_losses[epoch]))
-
-    print("time: {}".format(time.time() - start))
-
-    # plt.plot(range(len(train_losses)), train_losses, label="Train Loss", )
-    # plt.plot(range(len(test_losses)), test_losses, label="Test Loss", alpha=0.9)
-    # plt.legend()
-    # plt.show()
 
 
 def run_experiment(model_name: str,
@@ -130,7 +119,6 @@ def run_experiment(model_name: str,
     nept_log["beta"] = beta
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    print(f'Using {device} device')
 
     if model_name == "AE":
         model = AE(latent_size=latent_size)

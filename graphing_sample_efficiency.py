@@ -35,11 +35,12 @@ colours = {
 }
 
 import matplotlib.pyplot as plt
-plt.figure(figsize=(5,4))
+
+plt.figure(figsize=(5, 4))
 
 for beta in data_dict_2.keys():
-    x = [a for a,_ in data_dict_2[beta]]
-    y = [a for _,a in data_dict_2[beta]]
+    x = [a for a, _ in data_dict_2[beta]]
+    y = [a for _, a in data_dict_2[beta]]
     plt.plot(x, y, label=f"β={beta}", color=colours[beta], linewidth=3)
 plt.title("Sample efficiency by beta")
 plt.xlabel("Num. Samples (log)")

@@ -94,7 +94,7 @@ class VAE(nn.Module):
 
 def VAE_Loss(model_output, X, beta=1.0):
     X_out, KL = model_output
-    return AE_Loss(X_out, X) + beta*KL
+    return AE_Loss(X_out, X) + beta * KL
 
 
 # TODO - is this okay?
@@ -136,6 +136,6 @@ class MNISTClassifier(nn.Module):
         )
 
     def forward(self, x):
-        z = self.encoder(x)[:,0:self.latent_size]
+        z = self.encoder(x)[:, 0:self.latent_size]
         ps = self.dense(z)
         return ps

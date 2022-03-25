@@ -81,7 +81,7 @@ def get_shape_image(params: torch.tensor):
 
 
 def get_shape_image_8(params: torch.tensor):
-    assert params.shape == (8,) , params.shape
+    assert params.shape == (8,), params.shape
     coords = (5 + (3 * params[0:4])).int()
     unders = coords <= 0
     coords[unders] = 0
@@ -106,7 +106,6 @@ def get_shape_image_8(params: torch.tensor):
     w1 = im1.shape[1]
     h2 = im2.shape[0]
     w2 = im2.shape[1]
-    # print(h1, h2)
     blank = torch.zeros((1, 28, 28))
     blank[0, x1:x1 + h1, y1:y1 + w1] += im1
     # blank[0, x2:x2 + h2, y2:y2 + w2] += im2
@@ -114,7 +113,7 @@ def get_shape_image_8(params: torch.tensor):
 
 
 def get_shape_image_4(params: torch.tensor):
-    assert params.shape == (4,) , params.shape
+    assert params.shape == (4,), params.shape
     coords = (5 + (3 * params[0:2])).int()
     unders = coords <= 0
     coords[unders] = 0
@@ -131,8 +130,6 @@ def get_shape_image_4(params: torch.tensor):
     colours[overs2] = 1.9
 
     b1 = colours.item()
-
-
 
     # im1 = torch.tensor(ndimage.rotate(HEART, angle=rot1)) * b1
     im1 = torch.tensor(ndimage.zoom(ndimage.rotate(BOXEY_THING, angle=rot1), 1.3)) * b1

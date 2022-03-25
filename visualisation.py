@@ -50,7 +50,6 @@ def visualize_latent_space(X, encoder) -> plt.Figure:
     plt.scatter(Z[:, 0], Z[:, 1])
     return fig
 
-
 # class To_Canvas_Format(nn.Module):
 #
 #     def __init__(self):

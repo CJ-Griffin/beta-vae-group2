@@ -92,14 +92,12 @@ def experiment_supervised(
         original_run_name: str,
         epochs: int = 1000,
         lr: float = 0.01,
-        num_samples = int(1e4),
+        num_samples=int(1e4),
         batch_size_train: int = 100,
         batch_size_test: int = 1000):
-
     classifier = create_classifier_from_neptune(original_run_name)
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     classifier.to(device)
-    print(f'Using {device} device')
 
     nept_log = neptune.init(project="cj.griffin/beta-vae",
                             api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI5ZjE4NGNlOC0wMmFjLTQxZTEtODg1ZC0xMDRhMTg3YjI2ZjAifQ==")
@@ -116,7 +114,7 @@ def experiment_supervised(
 
 if __name__ == "__main__":
     for original_run_name in ["BVAE-130", "BVAE-126", "BVAE-133", "BVAE-127", "BVAE-128", ]:
-        for n in [10,100,1000,10000]:
+        for n in [10, 100, 1000, 10000]:
             experiment_supervised(original_run_name=original_run_name,
                                   num_samples=n,
                                   epochs=1)
