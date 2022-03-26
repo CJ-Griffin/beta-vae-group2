@@ -33,7 +33,7 @@ class Encoder(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, latent_size=2):
+    def __init__(self, latent_size=2, last_layer="sig"):
         super().__init__()
 
         self.convT1 = nn.ConvTranspose2d(10, 1, kernel_size=5)
@@ -41,6 +41,7 @@ class Decoder(nn.Module):
         # self.conv2_drop = nn.Dropout2d()
         self.fc1 = nn.Linear(50, 320)
         self.fc2 = nn.Linear(latent_size, 50)
+        self.last_layer = torch.tanh if last_layer=="tanh" else torch.sigmoid
 
     def forward(self, x):
         x = F.relu(self.fc2(x))
@@ -53,7 +54,7 @@ class Decoder(nn.Module):
 
         x = F.interpolate(x, scale_factor=2, mode='nearest')
         x = self.convT1(x)
-        x = torch.sigmoid(x)
+        x = self.last_layer(x)
 
         return x
 
@@ -69,11 +70,11 @@ class AE(nn.Sequential):
 
 
 class VAE(nn.Module):
-    def __init__(self, latent_size=10):
+    def __init__(self, latent_size=10, last_layer="sig"):
         super().__init__()
         self.latent_size = latent_size
         self.encoder = Encoder(latent_size * 2)
-        self.decoder = Decoder(latent_size)
+        self.decoder = Decoder(latent_size, last_layer=last_layer)
 
     def forward(self, X):
         X = self.encoder(X)
@@ -90,6 +91,26 @@ class VAE(nn.Module):
         # KL = torch.zeros_like(KL) # TODO remove, just seeing what happens
 
         return (X, KL)
+
+
+class TanhVAE(VAE):
+    def __init__(self, latent_size=10):
+        super().__init__(latent_size=latent_size, last_layer="tanh")
+
+
+class Dense28x28(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.dense = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(784, 784),
+            nn.ReLU(),
+            nn.Linear(784, 784),
+            nn.Unflatten(1, (1, 28, 28))
+        )
+
+    def forward(self, im):
+        return self.dense(im)
 
 
 def VAE_Loss(model_output, X, beta=1.0):

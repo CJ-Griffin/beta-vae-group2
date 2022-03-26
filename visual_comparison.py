@@ -44,23 +44,23 @@ def get_one_of_each_digit():
 
 
 if __name__ == "__main__":
-    to_test_2 = list(reversed([
-        "BVAE-159",
-        "BVAE-156",
-        "BVAE-155",
-        "BVAE-154",
-        "BVAE-153",
-        "BVAE-152",
-        "BVAE-151"
+    to_test_2 = list(([
+        "BVAE-294",
+        "BVAE-295",
+        "BVAE-355",
+        "BVAE-297",
+        "BVAE-298",
+        "BVAE-299",
+        "BVAE-300"
     ]))
-    to_test_10 = list(reversed([
-        "BVAE-166",
-        "BVAE-165",
-        "BVAE-169",
-        "BVAE-167",
-        "BVAE-162",
-        "BVAE-161",
-        "BVAE-160"
+    to_test_10 = list(([
+        "BVAE-360",
+        "BVAE-302",
+        "BVAE-303",
+        "BVAE-304",
+        "BVAE-305",
+        "BVAE-306",
+        "BVAE-307"
     ]))
     # model, _ = load_model_from_neptune("BVAE-24")
     # import matplotlib.pyplot as plt
@@ -68,7 +68,7 @@ if __name__ == "__main__":
     # plt.show()
     models = {}
     betas = {}
-    for original_run_name in to_test_10:  # Change 10 to 2 everywhere to switch
+    for original_run_name in to_test_2:  # Change 10 to 2 everywhere to switch
         model, beta = get_vae_from_neptune(run_name=original_run_name)
         models[original_run_name] = model
         betas[original_run_name] = beta
@@ -83,10 +83,10 @@ if __name__ == "__main__":
         # plt.show()
         # fig.show()
         labeled_dict = {"True": X_og}
-        for name in to_test_10:
+        for name in to_test_2:
             X_recon, _ = models[name](X_og)
             label = f"β={betas[name]}"
             labeled_dict[label] = X_recon
 
         fig = compare_images(labeled_dict)
-        plt.savefig(f"images/ls10_{fig_no}.png")
+        plt.savefig(f"images/ls2_{fig_no}.png")

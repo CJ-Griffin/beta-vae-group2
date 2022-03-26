@@ -7,7 +7,7 @@ import torch.cuda
 import torch.nn
 import torch.optim
 import torchvision
-from models import AE, VAE, VAE_Loss, AE_Loss
+from models import AE, VAE, VAE_Loss, AE_Loss, Dense28x28, TanhVAE
 from matplotlib import pyplot as plt
 from neptune import new as neptune
 from tqdm import tqdm
@@ -126,6 +126,12 @@ def run_experiment(model_name: str,
     elif model_name == "VAE":
         model = VAE(latent_size=latent_size)
         criterion = (lambda model_output, X: VAE_Loss(model_output, X, beta=beta))
+    elif model_name == "TanhVAE":
+        model = TanhVAE(latent_size=latent_size)
+        criterion = (lambda model_output, X: VAE_Loss(model_output, X, beta=beta))
+    elif model_name == "Dense":
+        model = Dense28x28()
+        criterion = AE_Loss
     else:
         raise NotImplementedError(f"model_name={model_name} not implemented")
     model.to(device)
@@ -141,7 +147,11 @@ def run_experiment(model_name: str,
 
     test_examples, _ = next(iter(get_dataloader(batch_size=1000, is_train=False, dataset_name=dataset_name)))
 
-    fig3 = visualize_latent_space(test_examples, model.encoder)
+    try:
+        fig3 = visualize_latent_space(test_examples, model.encoder)
+        nept_log["vis_latent_space"].upload(fig3)
+    except Exception as e:
+        pass
 
     test_examples = test_examples[:10, :].to(device)
 
@@ -152,7 +162,6 @@ def run_experiment(model_name: str,
         model_out = model_out[0]
     fig2 = show_images(model_out)
 
-    nept_log["vis_latent_space"].upload(fig3)
     nept_log["true_images"].upload(fig1)
     nept_log["recon_images"].upload(fig2)
 
