@@ -106,7 +106,8 @@ def run_experiment(model_name: str,
                    lr: float = 0.001,
                    epochs: int = 3,
                    dataset_name: str = "MNIST",
-                   is_offline: bool = False
+                   is_offline: bool = False,
+                   is_beta_normalised = False
                    ):
     nept_log = neptune.init(project="cj.griffin/beta-vae",
                             api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI5ZjE4NGNlOC0wMmFjLTQxZTEtODg1ZC0xMDRhMTg3YjI2ZjAifQ==",
@@ -116,6 +117,12 @@ def run_experiment(model_name: str,
     nept_log["epochs"] = epochs
     nept_log["dataset_name"] = dataset_name
     nept_log["latent_size"] = latent_size
+    if is_beta_normalised:
+        beta_norm = beta
+        nept_log["norm_beta"] = beta_norm
+        M = latent_size
+        N = 28*28
+        beta = beta_norm * N / M
     nept_log["beta"] = beta
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'

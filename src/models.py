@@ -88,8 +88,6 @@ class VAE(nn.Module):
         # we need to also return the KL term for the loss:
         KL = -0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim=1)
 
-        # KL = torch.zeros_like(KL) # TODO remove, just seeing what happens
-
         return (X, KL)
 
 
@@ -118,7 +116,6 @@ def VAE_Loss(model_output, X, beta=1.0):
     return AE_Loss(X_out, X) + beta * KL
 
 
-# TODO - is this okay?
 g_mseloss = torch.nn.MSELoss(reduction='none')
 
 

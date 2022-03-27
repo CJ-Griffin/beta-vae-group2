@@ -35,59 +35,82 @@ betas.sort()
 lss = list(lss)
 lss.sort(reverse=True)
 
-img = np.empty((len(lss), len(betas)))
+img = np.empty((len(betas), len(lss)))
 
 for _, b, ls, loss in encoder_losses:
-    xind = betas.index(b)
-    yind = lss.index(ls)
+    yind = betas.index(b)
+    xind = lss.index(ls)
     img[yind, xind] = loss
 
-plt.figure(figsize=(5,4))
+plt.figure(figsize=(5, 4))
 plt.imshow(img, cmap="plasma")
-plt.xticks(ticks=[i for i in range(len(betas))], labels=betas)
-plt.xlabel("Beta")
-plt.yticks(ticks=[i for i in range(len(lss))], labels=lss)
-plt.ylabel("Latent Space Size")
+plt.yticks(ticks=[i for i in range(len(betas))], labels=betas)
+plt.ylabel("Beta")
+plt.xticks(ticks=[i for i in range(len(lss))], labels=lss)
+plt.xlabel("Latent Space Size")
 plt.title("Test Reconstruction + KL Losses for Shapes")
 plt.colorbar()
 plt.show()
 
+# disentanglement_score_dict = {
+#     ('BVAE-451', 25.0, 81): float(0.2360),
+#     ('BVAE-450', 25.0, 27): float(0.3680),
+#     ('BVAE-449', 25.0, 9): float(0.2640),
+#     ('BVAE-448', 25.0, 3): float(0.2430),
+#     ('BVAE-447', 5.0, 81): float(0.2640),
+#     ('BVAE-446', 5.0, 27): float(0.2650),
+#     ('BVAE-445', 5.0, 9): float(0.2160),
+#     ('BVAE-444', 5.0, 3): float(0.1140),
+#     ('BVAE-443', 1.0, 81): float(0.3420),
+#     ('BVAE-442', 1.0, 27): float(0.2640),
+#     ('BVAE-441', 1.0, 9): float(0.1980),
+#     ('BVAE-440', 1.0, 3): float(0.2590),
+#     ('BVAE-439', 0.2, 81): float(0.2980),
+#     ('BVAE-438', 0.2, 27): float(0.2950),
+#     ('BVAE-437', 0.2, 9): float(0.2900),
+#     ('BVAE-436', 0.2, 3): float(0.2450),
+#     ('BVAE-435', 0.04, 81): float(0.3750),
+#     ('BVAE-434', 0.04, 27): float(0.3790),
+#     ('BVAE-433', 0.04, 9): float(0.2950),
+#     ('BVAE-432', 0.04, 3): float(0.2780)
+# }
+
 disentanglement_score_dict = {
-    ('BVAE-451', 25.0, 81): float(0.2360),
-    ('BVAE-450', 25.0, 27): float(0.3680),
-    ('BVAE-449', 25.0, 9): float(0.2640),
-    ('BVAE-448', 25.0, 3): float(0.2430),
-    ('BVAE-447', 5.0, 81): float(0.2640),
-    ('BVAE-446', 5.0, 27): float(0.2650),
-    ('BVAE-445', 5.0, 9): float(0.2160),
-    ('BVAE-444', 5.0, 3): float(0.1140),
-    ('BVAE-443', 1.0, 81): float(0.3420),
-    ('BVAE-442', 1.0, 27): float(0.2640),
-    ('BVAE-441', 1.0, 9): float(0.1980),
-    ('BVAE-440', 1.0, 3): float(0.2590),
-    ('BVAE-439', 0.2, 81): float(0.2980),
-    ('BVAE-438', 0.2, 27): float(0.2950),
-    ('BVAE-437', 0.2, 9): float(0.2900),
-    ('BVAE-436', 0.2, 3): float(0.2450),
-    ('BVAE-435', 0.04, 81): float(0.3750),
-    ('BVAE-434', 0.04, 27): float(0.3790),
-    ('BVAE-433', 0.04, 9): float(0.2950),
-    ('BVAE-432', 0.04, 3): float(0.2780)
+    ('BVAE-451', 25.0, 81): float(0.6870),
+    ('BVAE-450', 25.0, 27): float(0.6910),
+    ('BVAE-449', 25.0, 9): float(0.6680),
+    ('BVAE-448', 25.0, 3): float(0.6360),
+    ('BVAE-447', 5.0, 81): float(0.8750),
+    ('BVAE-446', 5.0, 27): float(0.8780),
+    ('BVAE-445', 5.0, 9): float(0.8430),
+    ('BVAE-444', 5.0, 3): float(0.6570),
+    ('BVAE-443', 1.0, 81): float(0.9810),
+    ('BVAE-442', 1.0, 27): float(0.9540),
+    ('BVAE-441', 1.0, 9): float(0.8740),
+    ('BVAE-440', 1.0, 3): float(0.6640),
+    ('BVAE-439', 0.2, 81): float(0.9770),
+    ('BVAE-438', 0.2, 27): float(0.9900),
+    ('BVAE-437', 0.2, 9): float(0.8250),
+    ('BVAE-436', 0.2, 3): float(0.8530),
+    ('BVAE-435', 0.04, 81): float(0.9950),
+    ('BVAE-434', 0.04, 27): float(0.9830),
+    ('BVAE-433', 0.04, 9): float(0.8930),
+    ('BVAE-432', 0.04, 3): float(0.8250)
 }
 
-img2 = np.empty((len(lss), len(betas)))
+img2 = np.empty((len(betas), len(lss)))
 for name, b, ls, _ in encoder_losses:
-    xind = betas.index(b)
-    yind = lss.index(ls)
+    yind = betas.index(b)
+    xind = lss.index(ls)
     img2[yind, xind] = disentanglement_score_dict[(name, b, ls)]
 # img2 -= img2.min()
 # img2 /= img2.max()
-plt.figure(figsize=(5,4))
+plt.figure(figsize=(5, 4))
 plt.imshow(img2, cmap="Purples")
-plt.xticks(ticks=[i for i in range(len(betas))], labels=betas)
-plt.xlabel("Beta")
-plt.yticks(ticks=[i for i in range(len(lss))], labels=lss)
-plt.ylabel("Latent Space Size")
+plt.yticks(ticks=[i for i in range(len(betas))], labels=betas)
+plt.ylabel("Beta")
+plt.xticks(ticks=[i for i in range(len(lss))], labels=lss)
+plt.xlabel("Latent Space Size")
 plt.title("Normalised Disentanglement Scores (Acc)")
 plt.colorbar()
 plt.show()
