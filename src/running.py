@@ -1,6 +1,3 @@
-import os
-import time
-
 import numpy as np
 import torch
 import torch.cuda
@@ -8,7 +5,6 @@ import torch.nn
 import torch.optim
 import torchvision
 from models import AE, VAE, VAE_Loss, AE_Loss, Dense28x28, TanhVAE
-from matplotlib import pyplot as plt
 from neptune import new as neptune
 from tqdm import tqdm
 
@@ -22,15 +18,11 @@ def get_dataloader(dataset_name: str,
                    num_samples=None):
     if dataset_name == "MNIST":
         dataset = torchvision.datasets.MNIST('data', train=is_train, download=True,
-                                             transform=torchvision.transforms.Compose([
-                                                 torchvision.transforms.ToTensor(),
-                                                 # torchvision.transforms.Normalize(
-                                                 #     (0.1307,), (0.3081,))
-                                             ]))
+                                             transform=torchvision.transforms.ToTensor())
         if num_samples is not None:
             dataset = torch.utils.data.Subset(dataset, list(range(num_samples)))
-            # dataset = dataset[:num_samples]
         return torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
+
     elif dataset_name == "Shapes":
         dataset = ShapesDataset()
         if num_samples is not None:
@@ -50,7 +42,7 @@ def get_dataloader(dataset_name: str,
 
 def step_autoencoder(model, criterion, loader, optimizer, train=True):
     if train:
-        model.train()  # sets the module in training mode.
+        model.train()
     else:
         model.eval()
 
@@ -76,7 +68,6 @@ def step_autoencoder(model, criterion, loader, optimizer, train=True):
             optimizer.step()
 
         total_n += X.shape[0]
-        # break
 
     loss = total_loss / total_n
     return loss
@@ -173,6 +164,6 @@ def run_experiment(model_name: str,
     nept_log["recon_images"].upload(fig2)
 
     torch.save(model, "../models/model_checkpoints/temp.pt")
-    nept_log["model_checkpoints/model"].upload("models/model_checkpoints/temp.pt")
+    nept_log["model_checkpoints/model"].upload("../models/model_checkpoints/temp.pt")
 
     nept_log.stop()

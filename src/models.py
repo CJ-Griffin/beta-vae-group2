@@ -1,9 +1,7 @@
 import torch
-from torch import nn as nn, nn
+from torch import nn
 from torch.nn import functional as F
 
-
-# from copy_of_encoder_experiments import g_mseloss
 
 class Encoder(nn.Module):
     def __init__(self, latent_size=2):
@@ -11,7 +9,6 @@ class Encoder(nn.Module):
 
         self.conv1 = nn.Conv2d(1, 10, kernel_size=5)
         self.conv2 = nn.Conv2d(10, 20, kernel_size=5)
-        # self.conv2_drop = nn.Dropout2d()
         self.latent_size = latent_size
         self.fc1 = nn.Linear(320, 50)
         self.fc2 = nn.Linear(50, latent_size)
@@ -27,7 +24,6 @@ class Encoder(nn.Module):
 
         x = x.view(-1, 320)
         x = F.relu(self.fc1(x))
-        # x = F.dropout(x, training=self.training)
         x = self.fc2(x)
         return x
 
@@ -38,10 +34,9 @@ class Decoder(nn.Module):
 
         self.convT1 = nn.ConvTranspose2d(10, 1, kernel_size=5)
         self.convT2 = nn.ConvTranspose2d(20, 10, kernel_size=5)
-        # self.conv2_drop = nn.Dropout2d()
         self.fc1 = nn.Linear(50, 320)
         self.fc2 = nn.Linear(latent_size, 50)
-        self.last_layer = torch.tanh if last_layer=="tanh" else torch.sigmoid
+        self.last_layer = torch.tanh if last_layer == "tanh" else torch.sigmoid
 
     def forward(self, x):
         x = F.relu(self.fc2(x))

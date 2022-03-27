@@ -19,8 +19,11 @@ def get_encoder_and_info_from_neptune(run_name: str) -> (torch.nn.Module, dict):
                             run=run_name)
     nept_log["model_checkpoints/model"].download(destination_path)
     info = {"Original": run_name}
-    for key in ["beta", "latent_size"]:
-        info[key] = nept_log[key].fetch()
+    info["latent_size"] = nept_log["latent_size"].fetch()
+    try:
+        info["beta"] = nept_log["norm_beta"].fetch()
+    except Exception as e:
+        info["beta"] = nept_log["beta"].fetch()
     nept_log.stop()
 
     if torch.cuda.is_available():
@@ -86,28 +89,11 @@ def compare_disentanglement(run_names: list[str], B=10000, L=25):
     print(scores)
 
 
-RUN_LABELS = [
-    "BVAE-451",
-    "BVAE-450",
-    "BVAE-449",
-    "BVAE-448",
-    "BVAE-447",
-    "BVAE-446",
-    "BVAE-445",
-    "BVAE-444",
-    "BVAE-443",
-    "BVAE-442",
-    "BVAE-441",
-    "BVAE-440",
-    "BVAE-439",
-    "BVAE-438",
-    "BVAE-437",
-    "BVAE-436",
-    "BVAE-435",
-    "BVAE-434",
-    "BVAE-433",
-    "BVAE-432",
-]
+RUN_LABELS = ['BVAE-483', 'BVAE-481', 'BVAE-480', 'BVAE-479', 'BVAE-478',
+              'BVAE-477', 'BVAE-476', 'BVAE-475', 'BVAE-474', 'BVAE-473',
+              'BVAE-472', 'BVAE-471', 'BVAE-470', 'BVAE-469', 'BVAE-468',
+              'BVAE-467', 'BVAE-466', 'BVAE-465', 'BVAE-464', 'BVAE-463',
+              'BVAE-462', 'BVAE-461', 'BVAE-460', 'BVAE-459', 'BVAE-458']
 
 if __name__ == "__main__":
-    compare_disentanglement(RUN_LABELS, B=1000, L=25)
+    compare_disentanglement(RUN_LABELS, B=10, L=25)
