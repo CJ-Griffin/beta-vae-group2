@@ -165,7 +165,7 @@ def run_experiment(model_name: str,
     nept_log["true_images"].upload(fig1)
     nept_log["recon_images"].upload(fig2)
 
-    torch.save(model, "models/model_checkpoints/temp.pt")
+    torch.save(model, "../models/model_checkpoints/temp.pt")
     nept_log["model_checkpoints/model"].upload("models/model_checkpoints/temp.pt")
 
     nept_log.stop()

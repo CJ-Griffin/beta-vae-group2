@@ -1,16 +1,11 @@
 import neptune.new as neptune
-import os
 
-import numpy as np
 import torch
 from matplotlib import pyplot as plt
 
-from models import MNISTClassifier
-from running import get_dataloader
-from tqdm import trange, tqdm
-from datetime import datetime
+from src.running import get_dataloader
 
-from visualisation import show_images, compare_images
+from visualisation import compare_images
 
 
 def get_vae_from_neptune(run_name: str) -> (torch.nn.Module, neptune.Run):
