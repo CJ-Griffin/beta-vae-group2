@@ -1,10 +1,15 @@
-import numpy as np
 import torch
 from torch.utils.data import Dataset
 from torch.utils.data.dataset import T_co
 from scipy import ndimage
-from tqdm import tqdm
 
+"""
+This file defines Shapes datasets used to quantify disentanglement.
+get_shape_image takes 4 generative variables and produces a (1,28,28) image
+
+"""
+
+# Tensors used to create shape images
 HEART = torch.tensor([
     [0, 0, 1, 0, 0, 0, 0, 1, 0, 0],
     [0, 1, 1, 1, 0, 0, 1, 1, 1, 0],
@@ -73,7 +78,8 @@ BOXEY_THING = torch.tensor([
 ]).float()
 
 
-def get_shape_image_4(gen_vars: torch.tensor) -> torch.Tensor:
+# Generate a 1*28*28 image from 4 N(0,1) generative variables
+def get_shape_image(gen_vars: torch.tensor) -> torch.Tensor:
     # gen_vars = [x, y, scale, rotation]
     assert gen_vars.shape == (4,), gen_vars.shape
     coords = (5 + (1.5 * gen_vars[0:2])).int()
@@ -109,6 +115,8 @@ def get_shape_image_4(gen_vars: torch.tensor) -> torch.Tensor:
     return blank
 
 
+# A torch Dataset of "Shapes" images generated from their generative
+# variables, used for quantifying disentanglement
 class ShapesDataset(Dataset):
     def __init__(self, N=int(1e4)):
         self.N = N
@@ -123,7 +131,7 @@ class ShapesDataset(Dataset):
 
     def get_im_(self, index):
         y = self.gen_vars[index, :]
-        return get_shape_image_4(y), y
+        return get_shape_image(y), y
 
     def __getitem__(self, index) -> T_co:
         return self.ims[index], self.ys[index]
@@ -132,6 +140,7 @@ class ShapesDataset(Dataset):
         return self.N
 
 
+# Generates a series of pairs of images x_1 and x_2, as described in section 3
 def get_im_pairs_tensor(B: int, L: int):
     # Notation taken from beta-VAE paper
     # B = number of samples (final Z_b vectors produced)
@@ -150,9 +159,9 @@ def get_im_pairs_tensor(B: int, L: int):
     # Generate the images
     for b in range(B):
         for l in range(L):
-            im1 = get_shape_image_4(gen_vars[b, l, 0])
+            im1 = get_shape_image(gen_vars[b, l, 0])
             im_tensor[b, l, 0, :, :, :] = im1
-            im2 = get_shape_image_4(gen_vars[b, l, 1])
+            im2 = get_shape_image(gen_vars[b, l, 1])
             im_tensor[b, l, 1, :, :, :] = im2
 
     mean = im_tensor.mean()
@@ -161,6 +170,7 @@ def get_im_pairs_tensor(B: int, L: int):
     return im_tensor, ys
 
 
+# Given a set of pairs of images (x_1's and x_2's) and an encoder, create a dataset of z_b's
 class ZbDatset(Dataset):
     def __init__(self, encoder, im_tensor: torch.Tensor, ys: torch.tensor):
         # Notation taken from beta-VAE paper
@@ -178,18 +188,19 @@ class ZbDatset(Dataset):
 
         self.latent_size = encoder.latent_size
         self.encoder = encoder
-
-        self.zs = torch.empty(self.B, self.L, 2, self.latent_size)
-
         self.ys = ys
 
+        # Create a tensor with the encoding of every image
+        self.zs = torch.empty(self.B, self.L, 2, self.latent_size)
         for b in range(self.B):
             im_batch = self.im_tensor[b, :]
             with torch.no_grad():
                 self.zs[b, :, 0] = encoder(im_batch[:, 0]).detach()
                 self.zs[b, :, 1] = encoder(im_batch[:, 1]).detach()
 
+        # Given z_l_1's and z_l_2's, calculate the absolute difference
         z_diffs = (self.zs[:, :, 0] - self.zs[:, :, 1]).abs()
+        # Get the mean to find the final value z_b
         self.z_bs = z_diffs.mean(dim=1)
         assert self.z_bs.shape == (self.B, self.latent_size)
 
@@ -201,7 +212,7 @@ class ZbDatset(Dataset):
 
 
 if __name__ == "__main__":
-    from src.disentanglement_experiments.quantify_disentanglement import get_encoder_and_info_from_neptune
+    from src.quantify_disentanglement import get_encoder_and_info_from_neptune
 
     g_B = 1000
     g_L = 25

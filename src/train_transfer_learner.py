@@ -4,10 +4,18 @@ import numpy as np
 import torch
 
 from src.models import MNISTClassifier
-from src.running import get_dataloader
+from src.train_autoencoder import get_dataloader
 from tqdm import trange
 
+"""
+This file enables experimentation with transfer learning sample efficiency. We load a VAE model from neptune and extract
+the encoder, then freeze its weights and train a simple classifier on-top using {0,1,...,9} labels from MNIST.
+By varying the number of lableled examples given to the model (1e2, 1e3, 1e4) we investigate the sample
+efficiency of the models.
+"""
 
+
+# Given the name of the neptune run, download the checkpoint, extract the encoder, and create a classifier
 def create_classifier_from_neptune(run_name: str) -> (torch.nn.Module, neptune.Run):
     destination_path = f"models/pretrained_models/{run_name}_model.pt"
 
@@ -26,6 +34,7 @@ def create_classifier_from_neptune(run_name: str) -> (torch.nn.Module, neptune.R
     return classifier
 
 
+# Train (or test) the classifier for a single epoch
 def step_classifier(model, loader, optimizer, train=True):
     if train:
         model.train()  # sets the module in training mode.
@@ -72,6 +81,7 @@ def step_classifier(model, loader, optimizer, train=True):
     return loss, accuracy
 
 
+# Train a model for several epochs and log the test and train loss
 def train_supervised(model, optimizer, nept_log, num_samples, batch_size_train, batch_size_test, epochs):
     train_data = get_dataloader("MNIST", batch_size=batch_size_train, is_train=True, num_samples=num_samples)
     test_data = get_dataloader("MNIST", batch_size=batch_size_test, is_train=False)
@@ -86,6 +96,7 @@ def train_supervised(model, optimizer, nept_log, num_samples, batch_size_train, 
         nept_log["supervised/Test Acc"].log(acc)
 
 
+# Thin wrapper to run a single experiment. This can be called easily from an ipybn
 def experiment_supervised(
         original_run_name: str,
         epochs: int = 1000,
@@ -110,6 +121,7 @@ def experiment_supervised(
     nept_log["model_checkpoints/supervised"].upload("models/supervised_checkpoints/classifier.pt")
 
 
+# An example of how to run supervised/transfer/classification experiments.
 if __name__ == "__main__":
     for original_run_name in ["BVAE-130", "BVAE-126", "BVAE-133", "BVAE-127", "BVAE-128", ]:
         for n in [10, 100, 1000, 10000]:

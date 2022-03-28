@@ -3,14 +3,16 @@ import neptune.new as neptune
 import torch
 from torch import nn, optim
 from torch.utils.data import DataLoader
-
 from tqdm import tqdm
+from models import TanhVAE
 
 from src.shape_dataset import get_im_pairs_tensor, ZbDatset
 
 NUM_GVS = 1
 
 
+# Fetch the trained VAE model from neptune,
+# Then extract and return the encoder with some information
 def get_encoder_and_info_from_neptune(run_name: str) -> (torch.nn.Module, dict):
     destination_path = f"models/pretrained_models/{run_name}_model.pt"
 
@@ -34,6 +36,7 @@ def get_encoder_and_info_from_neptune(run_name: str) -> (torch.nn.Module, dict):
     return encoder, info
 
 
+# Given a DataLoader for a ZbDatset, train a classifier to indentify the random choice of y_ind
 def get_disentanglement_score(train_loader: DataLoader, test_loader: DataLoader):
     classifier = nn.Sequential(
         nn.LazyLinear(4),
@@ -43,7 +46,7 @@ def get_disentanglement_score(train_loader: DataLoader, test_loader: DataLoader)
     optimiser = optim.Adam(classifier.parameters(), lr=0.001)
 
     epoch_losses = []
-    for epoch_no in tqdm(range(1000)):
+    for epoch_no in range(1000):
         epoch_loss = 0
         for z, y_ind in train_loader:
             optimiser.zero_grad()
@@ -68,6 +71,8 @@ def get_disentanglement_score(train_loader: DataLoader, test_loader: DataLoader)
     return corrects / totals
 
 
+# Given a name of runs (models) stored on Neptune, generate a series of ZbDatsets from a shared pool of images
+# Then train the classifiers to get disentanglement scores and print to use in visualising_disentanglement.py
 def compare_disentanglement(run_names: list[str], B=10000, L=25):
     train_ims, train_ys = get_im_pairs_tensor(B, L)
     test_ims, test_ys = get_im_pairs_tensor(1000, L)
@@ -89,11 +94,7 @@ def compare_disentanglement(run_names: list[str], B=10000, L=25):
     print(scores)
 
 
-RUN_LABELS = ['BVAE-483', 'BVAE-481', 'BVAE-480', 'BVAE-479', 'BVAE-478',
-              'BVAE-477', 'BVAE-476', 'BVAE-475', 'BVAE-474', 'BVAE-473',
-              'BVAE-472', 'BVAE-471', 'BVAE-470', 'BVAE-469', 'BVAE-468',
-              'BVAE-467', 'BVAE-466', 'BVAE-465', 'BVAE-464', 'BVAE-463',
-              'BVAE-462', 'BVAE-461', 'BVAE-460', 'BVAE-459', 'BVAE-458']
+RUN_LABELS = [f"BVAE-{i}" for i in range(512, 537)]
 
 if __name__ == "__main__":
-    compare_disentanglement(RUN_LABELS, B=10, L=25)
+    compare_disentanglement(RUN_LABELS, B=int(1e4), L=25)

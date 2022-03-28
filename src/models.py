@@ -3,6 +3,10 @@ from torch import nn
 from torch.nn import functional as F
 
 
+# Encoder for MNIST or Shapes images
+# Takes dim (batch_size, 1, 28, 28)
+# Returns dim (batch_size, latent_size)
+# If this is used in a VAE, the latent vector will be split in two to give mean and variance
 class Encoder(nn.Module):
     def __init__(self, latent_size=2):
         super().__init__()
@@ -28,6 +32,10 @@ class Encoder(nn.Module):
         return x
 
 
+# Decoder for MNIST or Shapes images
+# Takes dim (batch_size, latent_size)
+# Returns dim (batch_size, 1, 28, 28)
+# Allows choice of last-layer to enable "tanh" - required for 0-1 normalised datasets
 class Decoder(nn.Module):
     def __init__(self, latent_size=2, last_layer="sig"):
         super().__init__()
@@ -54,6 +62,7 @@ class Decoder(nn.Module):
         return x
 
 
+# A standard autoencoder for MNIST or Shapes
 class AE(nn.Sequential):
     def __init__(self, latent_size=10):
         encoder = Encoder(latent_size=latent_size)
@@ -64,6 +73,7 @@ class AE(nn.Sequential):
         self.decoder = decoder
 
 
+# A VAE autoencoder for MNIST or Shapes
 class VAE(nn.Module):
     def __init__(self, latent_size=10, last_layer="sig"):
         super().__init__()
@@ -71,7 +81,7 @@ class VAE(nn.Module):
         self.encoder = Encoder(latent_size * 2)
         self.decoder = Decoder(latent_size, last_layer=last_layer)
 
-    def forward(self, X):
+    def forward(self, X) -> (torch.Tensor, torch.Tensor):
         X = self.encoder(X)
         mu, log_var = torch.split(X, self.latent_size, dim=1)
 
@@ -83,14 +93,17 @@ class VAE(nn.Module):
         # we need to also return the KL term for the loss:
         KL = -0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim=1)
 
-        return (X, KL)
+        return X, KL
 
 
+# Creates a VAE with TanH final activation
+# Necessary for images encoded with -ve color values (e.g. normalised Shapes)
 class TanhVAE(VAE):
     def __init__(self, latent_size=10):
         super().__init__(latent_size=latent_size, last_layer="tanh")
 
 
+# A simple network used for debugging
 class Dense28x28(nn.Module):
     def __init__(self):
         super().__init__()
@@ -106,6 +119,7 @@ class Dense28x28(nn.Module):
         return self.dense(im)
 
 
+# The beta-VAE loss function, scaled by beta
 def VAE_Loss(model_output, X, beta=1.0):
     X_out, KL = model_output
     return AE_Loss(X_out, X) + beta * KL
@@ -114,6 +128,7 @@ def VAE_Loss(model_output, X, beta=1.0):
 g_mseloss = torch.nn.MSELoss(reduction='none')
 
 
+# A loss function for standard AutoEncoders
 def AE_Loss(X_out, X):
     losses = g_mseloss(X_out, X)
     losses = losses.view(losses.shape[0], -1)  # flattening losses, keeping batch dimension 0
@@ -121,26 +136,19 @@ def AE_Loss(X_out, X):
     return losses
 
 
-class VAE_to_encoder(nn.Module):
-    def __init__(self, vae):
-        super().__init__()
-        self.encoder = vae.encoder
-        self.latent_size = vae.latent_size
-
-    def forward(self, X):
-        X = self.encoder(X)
-        mu, log_var = torch.split(X, self.latent_size, dim=1)
-        return mu
-
-
+# A classifier using a frozen encoder, used for transfer learning
+# It takes an Encoder object, usually taken from a pretrained VAE, and freezes its weights
 class MNISTClassifier(nn.Module):
     def __init__(self, encoder: Encoder):
         super().__init__()
         self.encoder = encoder
+
+        # Freeze the weights of the encoder
         for param in self.encoder.parameters():
             param.requires_grad = False
         self.latent_size = encoder.latent_size
 
+        # train a dense classifier on top of the encoder
         self.dense = nn.Sequential(
             nn.Linear(self.latent_size, self.latent_size),
             nn.ReLU(),
@@ -149,6 +157,7 @@ class MNISTClassifier(nn.Module):
         )
 
     def forward(self, x):
+        # We use only [:, 0:self.latent_size] (the mean) as [:, self.latent_size:] contains the variance
         z = self.encoder(x)[:, 0:self.latent_size]
         ps = self.dense(z)
         return ps

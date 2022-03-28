@@ -3,7 +3,7 @@ import neptune.new as neptune
 import torch
 from matplotlib import pyplot as plt
 
-from src.running import get_dataloader
+from src.train_autoencoder import get_dataloader
 
 from visualisation import compare_images
 
