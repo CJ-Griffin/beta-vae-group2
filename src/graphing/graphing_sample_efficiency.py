@@ -75,15 +75,24 @@ colours = {
 
 import matplotlib.pyplot as plt
 
-plt.figure(figsize=(5, 4))
-
+fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True)
+lines = []
+labels = []
 for beta in data_dict_2.keys():
     x = [a for a, _ in data_dict_2[beta]]
     y = [a for _, a in data_dict_2[beta]]
-    plt.plot(x, y, label=f"β={beta}", color=colours[beta], linewidth=3)
-plt.title("Sample efficiency by beta")
-plt.xlabel("Num. Samples (log)")
-plt.ylabel("Test accuracy")
-plt.xscale("log")
-plt.legend()
+    lines.append(ax1.plot(x, y, label=f"β={beta}", color=colours[beta], linewidth=3))
+ax1.set_title("LS Dim. = 2")
+ax1.set_ylabel("Test accuracy")
+ax1.set_xscale("log")
+
+for beta in data_dict_10.keys():
+    x = [a for a, _ in data_dict_10[beta]]
+    y = [a for _, a in data_dict_10[beta]]
+    ax2.plot(x, y, label=f"β={beta}", color=colours[beta], linewidth=3)
+ax2.set_title("LS Dim. = 10")
+ax2.set_xscale("log")
+ax2.legend()
+fig.text(0.5, 0.02, 'Num. Samples (log)', ha='center')
+
 plt.show()

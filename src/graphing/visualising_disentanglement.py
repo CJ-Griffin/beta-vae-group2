@@ -1,4 +1,7 @@
+import math
+
 import numpy as np
+import torch
 from matplotlib import pyplot as plt
 
 # encoder_losses = [
@@ -74,6 +77,14 @@ for _, ls, b, loss in encoder_losses:
 
 plt.figure(figsize=(5.2, 4))
 plt.imshow(img, cmap="plasma")
+# | beta_norm = beta * ls / 784
+# | beta_norm = 1 * ls / 784
+# | y = log_{10}(beta_norm/2)
+lss_t = torch.tensor([5, 35, 65, 95, 125])
+beta_norms_for_beta_1 = lss_t / 784
+xs = (lss_t - 5) / 30
+ys = 5 - (torch.log10_(beta_norms_for_beta_1/2) + 3)
+plt.plot(xs, ys, c="Orange", alpha=0.7, linewidth=3)
 plt.yticks(ticks=[i for i in range(len(betas))], labels=betas)
 plt.ylabel("Beta")
 plt.xticks(ticks=[i for i in range(len(lss))], labels=lss)
@@ -149,6 +160,7 @@ for name, ls, b, _ in encoder_losses:
 
 plt.figure(figsize=(5.2, 4))
 plt.imshow(img2, cmap="Purples")
+plt.plot(xs, ys, c="Orange", alpha=0.7, linewidth=3)
 plt.yticks(ticks=[i for i in range(len(betas))], labels=betas)
 plt.ylabel("Beta")
 plt.xticks(ticks=[i for i in range(len(lss))], labels=lss)
