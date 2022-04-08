@@ -22,10 +22,32 @@ def show_images(X) -> plt.Figure:
 # Give a dict of title : set of images
 
 def compare_images(X_dict) -> plt.Figure:
+    height = len(X_dict)
+    width = (X_dict[list(X_dict.keys())[0]]).shape[0]
+    for _, X in X_dict.items():
+        assert X.shape[0] == width
+    print(height, width)
+    fig, axes = plt.subplots(height, width)
+    fig.tight_layout()
+    for row_no, (title, X) in enumerate(X_dict.items()):
+        X = X.detach().to('cpu')
+        for col_no in range(width):
+            ax = axes[row_no][col_no]
+            # ax.tight_layout()
+            ax.imshow(X[col_no][0], cmap='gray', interpolation='none')
+            ax.set_xticks([])
+            ax.set_yticks([])
+    fig.tight_layout()
+    fig.set_size_inches(11, 3, forward=True)
+    return fig
+
+
+def compare_images_2(X_dict) -> plt.Figure:
     width = len(X_dict)
     height = (X_dict[list(X_dict.keys())[0]]).shape[0]
     for _, X in X_dict.items():
         assert X.shape[0] == height
+    print(height, width)
     fig, axes = plt.subplots(height, width)
     fig.tight_layout()
     for col_no, (title, X) in enumerate(X_dict.items()):
@@ -38,7 +60,7 @@ def compare_images(X_dict) -> plt.Figure:
             ax.set_xticks([])
             ax.set_yticks([])
     fig.tight_layout()
-    fig.set_size_inches(2.5, 4, forward=True)
+    # fig.set_size_inches(2.5, 4, forward=True)
     return fig
 
 
